@@ -19,6 +19,8 @@ export class ChatStack extends Stack {
   constructor(scope: Construct, id: string, props?: StackProps) {
     super(scope, id, props);
 
+    const env = process.env.ENV || 'dev'
+
     const table = new Table(this, 'chatDb', {
       tableName: 'chatUsers',
       partitionKey: {
@@ -41,9 +43,9 @@ export class ChatStack extends Stack {
 
     const lambdaRole = new Role(
       this,
-      `parameters-secret-lambda-extension-role`,
+      `parameters-secret-lambda-extension-role-${env}`,
       {
-        roleName: `parameters-secret-lambda-extension-role`,
+        roleName: `parameters-secret-lambda-extension-role-${env}`,
         assumedBy: new ServicePrincipal('lambda.amazonaws.com'),
         managedPolicies: [
           {
@@ -104,7 +106,7 @@ export class ChatStack extends Stack {
 
     new WebSocketStage(this, 'MessageApiProd', {
       webSocketApi: wsApi,
-      stageName: 'prod',
+      stageName: env,
       autoDeploy: true,
     });
   }
