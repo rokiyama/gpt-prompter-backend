@@ -1,34 +1,15 @@
-# gpt-prompter
+# Welcome to your CDK TypeScript project
 
-## frontend
+You should explore the contents of this project. It demonstrates a CDK app with an instance of a stack (`CdkWorkshopStack`)
+which contains an Amazon SQS queue that is subscribed to an Amazon SNS topic.
 
-### build
+The `cdk.json` file tells the CDK Toolkit how to execute your app.
 
-```sh
-npm ci
+## Useful commands
 
-# increment ios buildNumber
-jq '.expo.ios.buildNumber = (."expo".ios.buildNumber | tonumber + 1 | tostring) | . ' app.json > app_new.json && mv app_new.json app.json
-
-eas build --platform ios --auto-submit
-```
-
-## backend
-
-### Bootstrap
-
-```sh
-npm run cdk bootstrap
-```
-
-### Deploy
-
-```sh
-npm run cdk deploy
-```
-
-### Register OpenAI API Key to SSM Parameter Store as a secret string
-
-```sh
-aws ssm put-parameter --name /openai/apiKey --value $OPENAI_API_KEY --type SecureString --key-id alias/lambda-kms-key
-```
+- `npm run build` compile typescript to js
+- `npm run watch` watch for changes and compile
+- `npm run test` perform the jest unit tests
+- `cdk deploy` deploy this stack to your default AWS account/region
+- `cdk diff` compare deployed stack with current state
+- `cdk synth` emits the synthesized CloudFormation template
