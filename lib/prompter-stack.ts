@@ -17,6 +17,7 @@ export class PrompterStack extends Stack {
     super(scope, id, props);
 
     const env = process.env.ENV || 'dev';
+    console.log(`------\n\nenv=${env}\n\n------\n`)
 
     const table = new Table(this, 'prompterDb', {
       tableName: 'prompterUsers',
