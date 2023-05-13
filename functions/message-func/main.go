@@ -7,12 +7,12 @@ import (
 	"net/http"
 	"os"
 
-	"github.com/rokiyama/gpt-prompter-backend/functions/entities"
-	"github.com/rokiyama/gpt-prompter-backend/functions/infrastructure/openai"
-	"github.com/rokiyama/gpt-prompter-backend/functions/infrastructure/parameterstore"
-	"github.com/rokiyama/gpt-prompter-backend/functions/infrastructure/repository"
-	"github.com/rokiyama/gpt-prompter-backend/functions/infrastructure/websocket"
-	"github.com/rokiyama/gpt-prompter-backend/functions/usecase"
+	"github.com/rokiyama/gpt-prompter-backend/functions/message-func/entities"
+	"github.com/rokiyama/gpt-prompter-backend/functions/message-func/infrastructure/openai"
+	"github.com/rokiyama/gpt-prompter-backend/functions/message-func/infrastructure/parameterstore"
+	"github.com/rokiyama/gpt-prompter-backend/functions/message-func/infrastructure/repository"
+	"github.com/rokiyama/gpt-prompter-backend/functions/message-func/infrastructure/websocket"
+	"github.com/rokiyama/gpt-prompter-backend/functions/message-func/usecase"
 
 	"github.com/aws/aws-lambda-go/events"
 	"github.com/aws/aws-lambda-go/lambda"

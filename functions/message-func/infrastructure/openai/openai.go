@@ -7,7 +7,7 @@ import (
 	"fmt"
 	"net/http"
 
-	"github.com/rokiyama/gpt-prompter-backend/functions/entities"
+	"github.com/rokiyama/gpt-prompter-backend/functions/message-func/entities"
 )
 
 var (

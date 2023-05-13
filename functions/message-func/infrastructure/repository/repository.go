@@ -1,7 +1,7 @@
 package repository
 
 import (
-	"github.com/rokiyama/gpt-prompter-backend/functions/entities"
+	"github.com/rokiyama/gpt-prompter-backend/functions/message-func/entities"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/session"

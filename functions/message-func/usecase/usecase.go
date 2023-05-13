@@ -4,9 +4,9 @@ import (
 	"strconv"
 	"time"
 
-	"github.com/rokiyama/gpt-prompter-backend/functions/constant"
-	"github.com/rokiyama/gpt-prompter-backend/functions/entities"
-	"github.com/rokiyama/gpt-prompter-backend/functions/infrastructure/repository"
+	"github.com/rokiyama/gpt-prompter-backend/functions/message-func/constant"
+	"github.com/rokiyama/gpt-prompter-backend/functions/message-func/entities"
+	"github.com/rokiyama/gpt-prompter-backend/functions/message-func/infrastructure/repository"
 
 	"go.uber.org/zap"
 )
