@@ -71,7 +71,7 @@ export class PrompterStack extends Stack {
 
     const messageFunc = new GoFunction(this, 'messageFunc', {
       entry: 'functions/message-func',
-      logRetention: RetentionDays.ONE_DAY,
+      logRetention: RetentionDays.ONE_YEAR,
       role: lambdaRole,
       timeout: Duration.minutes(15),
       layers: [
