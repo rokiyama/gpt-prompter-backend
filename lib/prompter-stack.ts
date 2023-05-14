@@ -31,10 +31,10 @@ export class PrompterStack extends Stack {
       removalPolicy: RemovalPolicy.DESTROY,
     });
 
-    const lambdaOpsKey = new Key(this, `lambda-kms-key`, {
+    const lambdaOpsKey = new Key(this, `lambda-kms-key-${env}`, {
       description:
         'Lambda KMS key for lambda function to get SSM key parameter store',
-      alias: `lambda-kms-key`,
+      alias: `lambda-kms-key-${env}`,
       removalPolicy: RemovalPolicy.DESTROY,
     });
 
