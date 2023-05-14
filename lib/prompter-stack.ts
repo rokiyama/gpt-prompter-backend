@@ -17,7 +17,6 @@ export class PrompterStack extends Stack {
     super(scope, id, props);
 
     const env = process.env.ENV || 'dev';
-    console.log(`------\n\nenv=${env}\n\n------\n`)
 
     const table = new Table(this, 'prompterDb', {
       tableName: 'prompterUsers',
@@ -86,7 +85,7 @@ export class PrompterStack extends Stack {
       ],
       environment: {
         CHAT_USERS_TABLE_NAME: table.tableName,
-        MAX_TOKENS_PER_DAY: '30000',
+        MAX_TOKENS_PER_DAY: env === 'prod' ? '10000' : '30000',
         SSM_OPENAI_API_KEY_PARAMETER_NAME: '/openai/apiKey',
       },
     });
