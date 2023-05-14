@@ -86,7 +86,7 @@ export class PrompterStack extends Stack {
       environment: {
         CHAT_USERS_TABLE_NAME: table.tableName,
         MAX_TOKENS_PER_DAY: env === 'prod' ? '10000' : '30000',
-        SSM_OPENAI_API_KEY_PARAMETER_NAME: '/openai/apiKey',
+        SSM_OPENAI_API_KEY_PARAMETER_NAME: `/openai/apiKey/${env}`,
       },
     });
     table.grantReadWriteData(messageFunc);
