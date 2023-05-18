@@ -27,6 +27,7 @@ var (
 )
 
 func handle(ctx context.Context, event events.APIGatewayWebsocketProxyRequest) (events.APIGatewayProxyResponse, error) {
+	logger.Info("Received", zap.String("eventBody", event.Body))
 	ws := websocket.New(
 		sess,
 		event.RequestContext.DomainName+"/"+event.RequestContext.Stage,
