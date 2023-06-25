@@ -9,12 +9,20 @@ npm run build
 ## Bootstrap
 
 ```sh
+# dev
+npm run cdk bootstrap
+
+# prod
 ENV=prod npm run cdk bootstrap
 ```
 
 ## Deploy
 
 ```sh
+# dev
+npm run cdk deploy
+
+# prod
 ENV=prod npm run cdk deploy
 ```
 

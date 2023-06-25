@@ -87,6 +87,8 @@ export class PrompterStack extends Stack {
         CHAT_USERS_TABLE_NAME: table.tableName,
         MAX_TOKENS_PER_DAY: env === 'prod' ? '10000' : '30000',
         SSM_OPENAI_API_KEY_PARAMETER_NAME: `/openai/apiKey/${env}`,
+        APPLE_JWKS_URL: 'https://appleid.apple.com/auth/keys',
+        ISSUER_APPLE: 'https://appleid.apple.com',
       },
     });
     table.grantReadWriteData(messageFunc);

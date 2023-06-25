@@ -10,6 +10,7 @@ type ErrCode string
 const (
 	InternalError      ErrCode = "internal_error"
 	BadRequest         ErrCode = "bad_request"
+	Unauthorized       ErrCode = "unauthorized"
 	TokenLimitExceeded ErrCode = "token_limit_exceeded"
 	ExternalError      ErrCode = "external_error"
 )

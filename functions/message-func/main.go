@@ -8,6 +8,7 @@ import (
 	"os"
 
 	"github.com/rokiyama/gpt-prompter-backend/functions/message-func/entities"
+	"github.com/rokiyama/gpt-prompter-backend/functions/message-func/infrastructure/jwt"
 	"github.com/rokiyama/gpt-prompter-backend/functions/message-func/infrastructure/openai"
 	"github.com/rokiyama/gpt-prompter-backend/functions/message-func/infrastructure/parameterstore"
 	"github.com/rokiyama/gpt-prompter-backend/functions/message-func/infrastructure/repository"
@@ -23,11 +24,12 @@ import (
 var (
 	sess     *session.Session
 	userRepo *repository.UserRepo
+	jp       *jwt.Parser
 	logger   *zap.Logger
 )
 
 func handle(ctx context.Context, event events.APIGatewayWebsocketProxyRequest) (events.APIGatewayProxyResponse, error) {
-	logger.Info("Received", zap.String("eventBody", event.Body))
+	logger.Info("Received")
 	ws := websocket.New(
 		sess,
 		event.RequestContext.DomainName+"/"+event.RequestContext.Stage,
@@ -46,11 +48,11 @@ func handle(ctx context.Context, event events.APIGatewayWebsocketProxyRequest) (
 		}, err
 	}
 	oai := openai.New("https://api.openai.com/v1/chat/completions", apiKey, ws)
-	uc := usecase.NewUsecase(logger, userRepo, ws, oai)
+	uc := usecase.NewUsecase(logger, userRepo, ws, oai, jp)
 
 	var req struct {
-		UserID string               `json:"userId"`
-		Body   entities.ChatRequest `json:"body"`
+		IDToken string               `json:"idToken"`
+		Body    entities.ChatRequest `json:"body"`
 	}
 	if err := json.Unmarshal([]byte(event.Body), &req); err != nil {
 		logger.Error("GetSSMParameterStore error", zap.Error(err))
@@ -63,7 +65,7 @@ func handle(ctx context.Context, event events.APIGatewayWebsocketProxyRequest) (
 			StatusCode: http.StatusBadRequest,
 		}, err
 	}
-	if err := uc.CallOpenAI(event.RequestContext.RequestID, req.UserID, req.Body); err != nil {
+	if err := uc.CallOpenAI(event.RequestContext.RequestID, req.IDToken, req.Body); err != nil {
 		return events.APIGatewayProxyResponse{
 			StatusCode: http.StatusInternalServerError,
 		}, err
@@ -86,6 +88,7 @@ func main() {
 	tableName := os.Getenv("CHAT_USERS_TABLE_NAME")
 	sess = session.Must(session.NewSession())
 	userRepo = repository.NewUserRepo(logger, sess, tableName)
+	jp = jwt.NewParser(os.Getenv("APPLE_JWKS_URL"), os.Getenv("ISSUER_APPLE"))
 
 	lambda.Start(handle)
 }
