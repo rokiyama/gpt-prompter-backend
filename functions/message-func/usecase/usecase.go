@@ -47,23 +47,28 @@ func NewUsecase(
 	}
 }
 
-func (u *Usecase) CallOpenAI(reqID string, idToken string, req entities.ChatRequest) error {
-	id, err := u.jp.Verify(idToken, time.Now())
-	if err != nil {
-		u.logger.Error("Invalid token", zap.Error(err), zap.String("reqId", reqID))
-		return u.ws.Send(&entities.Response{
-			Error: &entities.Error{
-				Code:    entities.Unauthorized,
-				Message: "token",
-			}})
-	}
-	sub := id.Subject
-	if sub == "" {
-		return u.ws.Send(&entities.Response{
-			Error: &entities.Error{
-				Code:    entities.BadRequest,
-				Message: "sub",
-			}})
+func (u *Usecase) CallOpenAI(reqID string, userID string, idToken string, req entities.ChatRequest) error {
+	var sub string
+	if idToken != "" {
+		id, err := u.jp.Verify(idToken, time.Now())
+		if err != nil {
+			u.logger.Error("Invalid token", zap.Error(err), zap.String("reqId", reqID))
+			return u.ws.Send(&entities.Response{
+				Error: &entities.Error{
+					Code:    entities.Unauthorized,
+					Message: "token",
+				}})
+		}
+		sub = id.Subject
+		if sub == "" {
+			return u.ws.Send(&entities.Response{
+				Error: &entities.Error{
+					Code:    entities.BadRequest,
+					Message: "sub",
+				}})
+		}
+	} else {
+		sub = userID // Deprecated
 	}
 
 	today := time.Now().In(constant.JST).Format("2006-01-02")
