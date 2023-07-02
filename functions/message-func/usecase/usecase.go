@@ -86,6 +86,7 @@ func (u *Usecase) CallOpenAI(reqID string, userID string, idToken string, req en
 
 	reqTokens := req.ApproximateTokens()
 	if sum := usage.Tokens + reqTokens; sum > constant.MaxTokensPerDay {
+		u.logger.Info("ApproximateTokens over limit", zap.Int("sum", sum))
 		return u.ws.Send(&entities.Response{
 			Error: &entities.Error{
 				Code:    entities.TokenLimitExceeded,
