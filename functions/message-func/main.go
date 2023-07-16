@@ -51,7 +51,6 @@ func handle(ctx context.Context, event events.APIGatewayWebsocketProxyRequest) (
 	uc := usecase.NewUsecase(logger, userRepo, ws, oai, jp)
 
 	var req struct {
-		UserID  string               `json:"userId"` // Deprecated
 		IDToken string               `json:"idToken"`
 		Body    entities.ChatRequest `json:"body"`
 	}
@@ -66,7 +65,7 @@ func handle(ctx context.Context, event events.APIGatewayWebsocketProxyRequest) (
 			StatusCode: http.StatusBadRequest,
 		}, err
 	}
-	if err := uc.CallOpenAI(event.RequestContext.RequestID, req.UserID, req.IDToken, req.Body); err != nil {
+	if err := uc.CallOpenAI(event.RequestContext.RequestID, req.IDToken, req.Body); err != nil {
 		return events.APIGatewayProxyResponse{
 			StatusCode: http.StatusInternalServerError,
 		}, err
