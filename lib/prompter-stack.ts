@@ -18,7 +18,7 @@ export class PrompterStack extends Stack {
 
     const env = process.env.ENV || 'dev';
 
-    const table = new Table(this, 'prompterDb', {
+    const usersTable = new Table(this, 'prompterDb', {
       tableName: 'prompterUsers',
       partitionKey: {
         name: 'id',
@@ -26,6 +26,15 @@ export class PrompterStack extends Stack {
       },
       sortKey: {
         name: 'date',
+        type: AttributeType.STRING,
+      },
+      removalPolicy: RemovalPolicy.DESTROY,
+    });
+
+    const deleteUsersTable = new Table(this, 'usersToBeDeleted', {
+      tableName: 'usersToBeDeleted',
+      partitionKey: {
+        name: 'id',
         type: AttributeType.STRING,
       },
       removalPolicy: RemovalPolicy.DESTROY,
@@ -84,14 +93,16 @@ export class PrompterStack extends Stack {
         ),
       ],
       environment: {
-        CHAT_USERS_TABLE_NAME: table.tableName,
+        CHAT_USERS_TABLE_NAME: usersTable.tableName,
+        USERS_TO_BE_DELETED_TABLE_NAME: deleteUsersTable.tableName,
         MAX_TOKENS_PER_DAY: env === 'prod' ? '100000' : '300000',
         SSM_OPENAI_API_KEY_PARAMETER_NAME: `/openai/apiKey/${env}`,
         APPLE_JWKS_URL: 'https://appleid.apple.com/auth/keys',
         ISSUER_APPLE: 'https://appleid.apple.com',
       },
     });
-    table.grantReadWriteData(messageFunc);
+    usersTable.grantReadWriteData(messageFunc);
+    deleteUsersTable.grantReadWriteData(messageFunc);
 
     const wsApi = new WebSocketApi(this, 'web-socket-api', {
       routeSelectionExpression: '$request.body.action',
