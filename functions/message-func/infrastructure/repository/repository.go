@@ -71,6 +71,18 @@ func (r *UserRepo) Put(usage entities.DailyUsage) error {
 	}).Run()
 }
 
+func (r *UserRepo) IsUserAlreadyReservedForDeletion(userID string) (bool, error) {
+	var got deleteUserTable
+	err := r.deleteUserTable.Get("id", userID).One(&got)
+	if err != nil {
+		if err == dynamo.ErrNotFound {
+			return false, nil
+		}
+		return false, err
+	}
+	return true, nil
+}
+
 func (r *UserRepo) ReserveUserForDeletion(userID string) error {
 	return r.deleteUserTable.Put(deleteUserTable{userID}).Run()
 }
