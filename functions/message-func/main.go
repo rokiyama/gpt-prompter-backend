@@ -86,8 +86,9 @@ func main() {
 	l.Info("Initialized.")
 
 	tableName := os.Getenv("CHAT_USERS_TABLE_NAME")
+	deleteTableName := os.Getenv("USERS_TO_BE_DELETED_TABLE_NAME")
 	sess = session.Must(session.NewSession())
-	userRepo = repository.NewUserRepo(logger, sess, tableName)
+	userRepo = repository.NewUserRepo(logger, sess, tableName, deleteTableName)
 	jp = jwt.NewParser(os.Getenv("APPLE_JWKS_URL"), os.Getenv("ISSUER_APPLE"))
 
 	lambda.Start(handle)

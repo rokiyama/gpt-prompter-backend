@@ -15,17 +15,29 @@ type userTable struct {
 	Tokens int    `dynamo:"tokens"`
 }
 
-type UserRepo struct {
-	logger *zap.Logger
-	table  dynamo.Table
+type deleteUserTable struct {
+	ID string `dynamo:"id"`
 }
 
-func NewUserRepo(logger *zap.Logger, awsSession *session.Session, tableName string) *UserRepo {
+type UserRepo struct {
+	logger          *zap.Logger
+	table           dynamo.Table
+	deleteUserTable dynamo.Table
+}
+
+func NewUserRepo(
+	logger *zap.Logger,
+	awsSession *session.Session,
+	tableName string,
+	deleteUserTableName string,
+) *UserRepo {
 	db := dynamo.New(awsSession, &aws.Config{})
 	table := db.Table(tableName)
+	deleteUserTable := db.Table(deleteUserTableName)
 	return &UserRepo{
-		logger: logger,
-		table:  table,
+		logger:          logger,
+		table:           table,
+		deleteUserTable: deleteUserTable,
 	}
 }
 
@@ -57,4 +69,8 @@ func (r *UserRepo) Put(usage entities.DailyUsage) error {
 		Date:   usage.Date,
 		Tokens: usage.Tokens,
 	}).Run()
+}
+
+func (r *UserRepo) ReserveUserForDeletion(userID string) error {
+	return r.deleteUserTable.Put(deleteUserTable{userID}).Run()
 }

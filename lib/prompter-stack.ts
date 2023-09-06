@@ -1,11 +1,17 @@
+import { HttpApi, HttpMethod } from '@aws-cdk/aws-apigatewayv2-alpha/lib/http';
 import {
   WebSocketApi,
   WebSocketStage,
 } from '@aws-cdk/aws-apigatewayv2-alpha/lib/websocket';
-import { WebSocketLambdaIntegration } from '@aws-cdk/aws-apigatewayv2-integrations-alpha';
+import {
+  HttpLambdaIntegration,
+  WebSocketLambdaIntegration,
+} from '@aws-cdk/aws-apigatewayv2-integrations-alpha';
 import { RemovalPolicy, Stack, StackProps } from 'aws-cdk-lib';
 import { Key } from 'aws-cdk-lib/aws-kms';
 import { Construct } from 'constructs';
+import { DeleteUserFunc } from './delete-user-func';
+import { LambdaExecRole } from './lambda-exec-role';
 import { MessageFunc } from './message-func';
 import { newMessageFuncRole } from './message-func-role';
 import { newTables } from './tables';
@@ -54,6 +60,25 @@ export class PrompterStack extends Stack {
       webSocketApi: wsApi,
       stageName: env,
       autoDeploy: true,
+    });
+
+    const lambdaExecutionRole = new LambdaExecRole(this, 'roles', { env });
+
+    const deleteUsersFunc = new DeleteUserFunc(this, 'deleteUserFunc', {
+      env,
+      role: lambdaExecutionRole.role,
+      usersTable,
+      deleteUsersTable,
+    });
+
+    const httpApi = new HttpApi(this, 'HttpApi');
+    httpApi.addRoutes({
+      path: '/delete-user',
+      methods: [HttpMethod.POST],
+      integration: new HttpLambdaIntegration(
+        'DeleteUserIntegration',
+        deleteUsersFunc.handler
+      ),
     });
   }
 }
