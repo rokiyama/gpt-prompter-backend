@@ -33,7 +33,7 @@ func handle(ctx context.Context, event events.APIGatewayProxyRequest) (events.AP
 		logger.Error("parse error", zap.Error(err))
 		return events.APIGatewayProxyResponse{
 			StatusCode: http.StatusBadRequest,
-		}, err
+		}, nil
 	}
 
 	id, err := jp.Verify(req.IDToken, time.Now())
@@ -41,7 +41,7 @@ func handle(ctx context.Context, event events.APIGatewayProxyRequest) (events.AP
 		logger.Error("Invalid token", zap.Error(err), zap.String("reqId", event.RequestContext.RequestID))
 		return events.APIGatewayProxyResponse{
 			StatusCode: http.StatusUnauthorized,
-		}, err
+		}, nil
 	}
 	logger.Info("Verified", zap.String("sub", id.Subject))
 
@@ -49,7 +49,7 @@ func handle(ctx context.Context, event events.APIGatewayProxyRequest) (events.AP
 		logger.Error("Failed to ReserveUserForDeletion", zap.Error(err), zap.String("reqId", event.RequestContext.RequestID))
 		return events.APIGatewayProxyResponse{
 			StatusCode: http.StatusInternalServerError,
-		}, err
+		}, nil
 	}
 
 	return events.APIGatewayProxyResponse{
