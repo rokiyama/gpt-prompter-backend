@@ -45,6 +45,20 @@ func handle(ctx context.Context, event events.APIGatewayProxyRequest) (events.AP
 	}
 	logger.Info("Verified", zap.String("sub", id.Subject))
 
+	reserved, err := userRepo.IsUserAlreadyReservedForDeletion(id.Subject)
+	if err != nil {
+		logger.Error("Failed to IsUserAlreadyReservedForDeletion", zap.Error(err), zap.String("reqId", event.RequestContext.RequestID))
+		return events.APIGatewayProxyResponse{
+			StatusCode: http.StatusInternalServerError,
+		}, nil
+	}
+	if reserved {
+		logger.Info("Already reserved", zap.String("reqId", event.RequestContext.RequestID))
+		return events.APIGatewayProxyResponse{
+			StatusCode: http.StatusConflict,
+		}, nil
+	}
+
 	if err := userRepo.ReserveUserForDeletion(id.Subject); err != nil {
 		logger.Error("Failed to ReserveUserForDeletion", zap.Error(err), zap.String("reqId", event.RequestContext.RequestID))
 		return events.APIGatewayProxyResponse{
