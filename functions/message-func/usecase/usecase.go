@@ -66,6 +66,24 @@ func (u *Usecase) CallOpenAI(reqID string, idToken string, req entities.ChatRequ
 			}})
 	}
 
+	deleted, err := u.repo.IsUserAlreadyReservedForDeletion(sub)
+	if err != nil {
+		u.logger.Error("Failed to IsUserAlreadyReservedForDeletion", zap.Error(err), zap.String("reqId", reqID))
+		return u.ws.Send(&entities.Response{
+			Error: &entities.Error{
+				Code:    entities.InternalError,
+				Message: "IsUserAlreadyReservedForDeletion",
+			}})
+	}
+	if deleted {
+		u.logger.Info("Already reserved for deletion", zap.String("reqId", reqID), zap.String("sub", sub))
+		return u.ws.Send(&entities.Response{
+			Error: &entities.Error{
+				Code:    entities.UserWillBeDeleted,
+				Message: "userWillBeDeleted",
+			}})
+	}
+
 	today := time.Now().In(constant.JST).Format("2006-01-02")
 
 	usage, err := u.repo.Get(sub, today)
