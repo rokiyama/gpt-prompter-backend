@@ -14,7 +14,7 @@ import { ReserveUserDeletionFunc } from './reserve-user-deletion-func';
 import { LambdaExecRole } from './lambda-exec-role';
 import { MessageFunc } from './message-func';
 import { newMessageFuncRole } from './message-func-role';
-import { newTables } from './tables';
+import { DB } from './tables';
 
 export class PrompterStack extends Stack {
   constructor(scope: Construct, id: string, props?: StackProps) {
@@ -35,16 +35,15 @@ export class PrompterStack extends Stack {
       lambdaOpsKey,
     });
 
-    const { usersTable, deleteUsersTable } = newTables(this);
+    const db = new DB(this, 'Db');
 
-    const messageFunc = new MessageFunc(this, 'messageFunc', {
+    const messageFunc = new MessageFunc(this, 'MessageFunc', {
       env,
       role: messageFuncRole,
-      usersTable,
-      deleteUsersTable,
+      usersTable: db.usersTable,
     });
 
-    const wsApi = new WebSocketApi(this, 'web-socket-api', {
+    const wsApi = new WebSocketApi(this, 'Default', {
       routeSelectionExpression: '$request.body.action',
     });
 
@@ -56,7 +55,7 @@ export class PrompterStack extends Stack {
     });
     wsApi.grantManageConnections(messageFunc.handler);
 
-    new WebSocketStage(this, 'MessageApiProd', {
+    new WebSocketStage(this, 'Default', {
       webSocketApi: wsApi,
       stageName: env,
       autoDeploy: true,
@@ -66,16 +65,15 @@ export class PrompterStack extends Stack {
 
     const reserveUserDeletionFunc = new ReserveUserDeletionFunc(
       this,
-      'reserveUserDeletionFunc',
+      'ReserveUserDeletionFunc',
       {
         env,
         role: lambdaExecutionRole.role,
-        usersTable,
-        deleteUsersTable,
+        usersTable: db.usersTable,
       }
     );
 
-    const httpApi = new HttpApi(this, 'HttpApi');
+    const httpApi = new HttpApi(this, 'Default');
     httpApi.addRoutes({
       path: '/reserve-user-deletion',
       methods: [HttpMethod.POST],
