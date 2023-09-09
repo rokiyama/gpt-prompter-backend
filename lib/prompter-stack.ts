@@ -43,7 +43,7 @@ export class PrompterStack extends Stack {
       usersTable: db.usersTable,
     });
 
-    const wsApi = new WebSocketApi(this, 'Default', {
+    const wsApi = new WebSocketApi(this, 'WebSocketApi', {
       routeSelectionExpression: '$request.body.action',
     });
 
@@ -55,7 +55,7 @@ export class PrompterStack extends Stack {
     });
     wsApi.grantManageConnections(messageFunc.handler);
 
-    new WebSocketStage(this, 'Default', {
+    new WebSocketStage(this, 'WebSocketStage', {
       webSocketApi: wsApi,
       stageName: env,
       autoDeploy: true,
@@ -73,7 +73,7 @@ export class PrompterStack extends Stack {
       }
     );
 
-    const httpApi = new HttpApi(this, 'Default');
+    const httpApi = new HttpApi(this, 'HttpApi');
     httpApi.addRoutes({
       path: '/reserve-user-deletion',
       methods: [HttpMethod.POST],
