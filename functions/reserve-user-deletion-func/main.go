@@ -45,22 +45,22 @@ func handle(ctx context.Context, event events.APIGatewayProxyRequest) (events.AP
 	}
 	logger.Info("Verified", zap.String("sub", id.Subject))
 
-	reserved, err := userRepo.IsUserAlreadyReservedForDeletion(id.Subject)
+	user, err := userRepo.Get(id.Subject)
 	if err != nil {
 		logger.Error("Failed to IsUserAlreadyReservedForDeletion", zap.Error(err), zap.String("reqId", event.RequestContext.RequestID))
 		return events.APIGatewayProxyResponse{
 			StatusCode: http.StatusInternalServerError,
 		}, nil
 	}
-	if reserved {
+	if user.Deleted {
 		logger.Info("Already reserved", zap.String("reqId", event.RequestContext.RequestID))
 		return events.APIGatewayProxyResponse{
 			StatusCode: http.StatusConflict,
 		}, nil
 	}
 
-	expireAt := time.Now().Add(12 * time.Hour).Unix()
-	if err := userRepo.ReserveUserForDeletion(id.Subject, expireAt); err != nil {
+	user.Deleted = true
+	if err := userRepo.Put(*user); err != nil {
 		logger.Error("Failed to ReserveUserForDeletion", zap.Error(err), zap.String("reqId", event.RequestContext.RequestID))
 		return events.APIGatewayProxyResponse{
 			StatusCode: http.StatusInternalServerError,
@@ -81,10 +81,9 @@ func main() {
 	defer l.Sync()
 	l.Info("Initialized.")
 
-	tableName := os.Getenv("CHAT_USERS_TABLE_NAME")
-	deleteTableName := os.Getenv("USERS_TO_BE_DELETED_TABLE_NAME")
+	userTableName := os.Getenv("CHAT_USERS_TABLE_NAME")
 	sess = session.Must(session.NewSession())
-	userRepo = repository.NewUserRepo(logger, sess, tableName, deleteTableName)
+	userRepo = repository.NewUserRepo(logger, sess, userTableName)
 	jp = jwt.NewParser(os.Getenv("APPLE_JWKS_URL"), os.Getenv("ISSUER_APPLE"))
 
 	lambda.Start(handle)

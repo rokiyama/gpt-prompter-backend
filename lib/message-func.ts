@@ -10,20 +10,15 @@ type Props = {
   env: string;
   role: Role;
   usersTable: Table;
-  deleteUsersTable: Table;
 };
 
 export class MessageFunc extends Construct {
   public readonly handler: GoFunction;
 
-  constructor(
-    scope: Construct,
-    id: string,
-    { env, role, usersTable, deleteUsersTable }: Props
-  ) {
+  constructor(scope: Construct, id: string, { env, role, usersTable }: Props) {
     super(scope, id);
 
-    this.handler = new GoFunction(this, 'messageFuncHandler', {
+    this.handler = new GoFunction(this, 'Default', {
       entry: 'functions/message-func',
       logRetention: RetentionDays.ONE_YEAR,
       role,
@@ -39,7 +34,6 @@ export class MessageFunc extends Construct {
       ],
       environment: {
         CHAT_USERS_TABLE_NAME: usersTable.tableName,
-        USERS_TO_BE_DELETED_TABLE_NAME: deleteUsersTable.tableName,
         MAX_TOKENS_PER_DAY: env === 'prod' ? '100000' : '300000',
         SSM_OPENAI_API_KEY_PARAMETER_NAME: `/openai/apiKey/${env}`,
         APPLE_JWKS_URL: 'https://appleid.apple.com/auth/keys',
@@ -48,6 +42,5 @@ export class MessageFunc extends Construct {
     });
 
     usersTable.grantReadWriteData(this.handler);
-    deleteUsersTable.grantReadWriteData(this.handler);
   }
 }

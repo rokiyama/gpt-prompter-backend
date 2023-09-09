@@ -57,11 +57,11 @@ func NewUsecase(
 func (u *Usecase) CallOpenAI(reqID string, idToken string, req entities.ChatRequest) error {
 	u.ctx.requestID = reqID
 	id := u.verify(idToken)
-	sub := u.getSub(id)
-	u.checkIsUserDeleted(sub)
-	usage := u.checkTokenUsage(sub, req.ApproximateTokens())
+	user := u.getUser(id)
+	u.checkIsUserDeleted(user)
+	u.checkTokenUsage(user, req.ApproximateTokens())
 	usedTokens := u.callOpenAI(req)
-	u.saveTokenUsage(usage, usedTokens)
+	u.saveTokenUsage(user, usedTokens)
 	return u.sendResponseIfErr()
 }
 
@@ -82,9 +82,9 @@ func (u *Usecase) verify(idToken string) *entities.ID {
 	return id
 }
 
-func (u *Usecase) getSub(id *entities.ID) string {
+func (u *Usecase) getUser(id *entities.ID) *entities.User {
 	if u.ctx.errRes != nil {
-		return ""
+		return nil
 	}
 	sub := id.Subject
 	if sub == "" {
@@ -94,42 +94,9 @@ func (u *Usecase) getSub(id *entities.ID) string {
 				Code:    entities.BadRequest,
 				Message: "sub",
 			}}
-		return ""
-	}
-	return sub
-}
-
-func (u *Usecase) checkIsUserDeleted(sub string) {
-	if u.ctx.errRes != nil {
-		return
-	}
-	deleted, err := u.repo.IsUserAlreadyReservedForDeletion(sub)
-	if err != nil {
-		u.logError("Failed to IsUserAlreadyReservedForDeletion", zap.Error(err))
-		u.ctx.errRes = &entities.Response{
-			Error: &entities.Error{
-				Code:    entities.InternalError,
-				Message: "internalError",
-			}}
-		return
-	}
-	if deleted {
-		u.logInfo("Already reserved for deletion", zap.String("sub", sub))
-		u.ctx.errRes = &entities.Response{
-			Error: &entities.Error{
-				Code:    entities.UserWillBeDeleted,
-				Message: "userWillBeDeleted",
-			}}
-		return
-	}
-}
-
-func (u *Usecase) checkTokenUsage(sub string, reqTokens int) *entities.DailyUsage {
-	if u.ctx.errRes != nil {
 		return nil
 	}
-	today := time.Now().In(constant.JST).Format("2006-01-02")
-	usage, err := u.repo.Get(sub, today)
+	user, err := u.repo.Get(sub)
 	if err != nil {
 		u.logError("User get error", zap.Error(err))
 		u.ctx.errRes = &entities.Response{
@@ -139,30 +106,51 @@ func (u *Usecase) checkTokenUsage(sub string, reqTokens int) *entities.DailyUsag
 			}}
 		return nil
 	}
-	u.logInfo("Got", zap.Any("usage", usage))
+	u.logInfo("Got", zap.Any("user", user))
+	return user
+}
 
-	if sum := usage.Tokens + reqTokens; sum > constant.MaxTokensPerDay {
+func (u *Usecase) checkIsUserDeleted(user *entities.User) {
+	if u.ctx.errRes != nil {
+		return
+	}
+	if user.Deleted {
+		u.logInfo("Already reserved for deletion", zap.Any("user", user))
+		u.ctx.errRes = &entities.Response{
+			Error: &entities.Error{
+				Code:    entities.UserWillBeDeleted,
+				Message: "userWillBeDeleted",
+			}}
+		return
+	}
+}
+
+func (u *Usecase) checkTokenUsage(user *entities.User, reqTokens int) {
+	if u.ctx.errRes != nil {
+		return
+	}
+
+	if sum := user.Tokens + reqTokens; sum > constant.MaxTokensPerDay {
 		u.logInfo("ApproximateTokens over limit", zap.Int("sum", sum))
 		u.ctx.errRes = &entities.Response{
 			Error: &entities.Error{
 				Code:    entities.TokenLimitExceeded,
 				Message: strconv.Itoa(sum),
 			}}
-		return nil
+		return
 	}
 
-	usage.Tokens += reqTokens
-	u.logInfo("Put before request", zap.Any("usage", usage), zap.Int("reqTokens", reqTokens))
-	if err := u.repo.Put(usage); err != nil {
+	user.Tokens += reqTokens
+	u.logInfo("Put before request", zap.Any("usage", user), zap.Int("reqTokens", reqTokens))
+	if err := u.repo.Put(*user); err != nil {
 		u.logError("User put error", zap.Error(err))
 		u.ctx.errRes = &entities.Response{
 			Error: &entities.Error{
 				Code:    entities.InternalError,
 				Message: "putUser",
 			}}
-		return nil
+		return
 	}
-	return &usage
 }
 
 func (u *Usecase) callOpenAI(req entities.ChatRequest) int {
@@ -182,16 +170,13 @@ func (u *Usecase) callOpenAI(req entities.ChatRequest) int {
 	return usedTokens
 }
 
-func (u *Usecase) saveTokenUsage(usage *entities.DailyUsage, usedTokens int) {
+func (u *Usecase) saveTokenUsage(user *entities.User, usedTokens int) {
 	if u.ctx.errRes != nil {
 		return
 	}
-	if usage == nil {
-		return
-	}
-	usage.Tokens += usedTokens
-	u.logInfo("Put after request", zap.Any("usage", usage), zap.Int("usedTokens", usedTokens))
-	if err := u.repo.Put(*usage); err != nil {
+	user.Tokens += usedTokens
+	u.logInfo("Put after request", zap.Any("user", user), zap.Int("usedTokens", usedTokens))
+	if err := u.repo.Put(*user); err != nil {
 		u.logError("User put error", zap.Error(err))
 		u.ctx.errRes = &entities.Response{
 			Error: &entities.Error{
