@@ -10,7 +10,7 @@ import {
 import { RemovalPolicy, Stack, StackProps } from 'aws-cdk-lib';
 import { Key } from 'aws-cdk-lib/aws-kms';
 import { Construct } from 'constructs';
-import { DeleteUserFunc } from './delete-user-func';
+import { ReserveUserDeletionFunc } from './reserve-user-deletion-func';
 import { LambdaExecRole } from './lambda-exec-role';
 import { MessageFunc } from './message-func';
 import { newMessageFuncRole } from './message-func-role';
@@ -64,20 +64,24 @@ export class PrompterStack extends Stack {
 
     const lambdaExecutionRole = new LambdaExecRole(this, 'roles', { env });
 
-    const deleteUsersFunc = new DeleteUserFunc(this, 'deleteUserFunc', {
-      env,
-      role: lambdaExecutionRole.role,
-      usersTable,
-      deleteUsersTable,
-    });
+    const reserveUserDeletionFunc = new ReserveUserDeletionFunc(
+      this,
+      'reserveUserDeletionFunc',
+      {
+        env,
+        role: lambdaExecutionRole.role,
+        usersTable,
+        deleteUsersTable,
+      }
+    );
 
     const httpApi = new HttpApi(this, 'HttpApi');
     httpApi.addRoutes({
-      path: '/delete-user',
+      path: '/reserve-user-deletion',
       methods: [HttpMethod.POST],
       integration: new HttpLambdaIntegration(
-        'DeleteUserIntegration',
-        deleteUsersFunc.handler
+        'ReserveUserDeletionIntegration',
+        reserveUserDeletionFunc.handler
       ),
     });
   }
