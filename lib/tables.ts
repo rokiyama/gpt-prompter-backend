@@ -22,6 +22,7 @@ export const newTables = (parent: Construct) => {
       name: 'id',
       type: AttributeType.STRING,
     },
+    timeToLiveAttribute: 'expireAt',
     removalPolicy: RemovalPolicy.DESTROY,
   });
 

@@ -16,7 +16,8 @@ type userTable struct {
 }
 
 type deleteUserTable struct {
-	ID string `dynamo:"id"`
+	ID       string `dynamo:"id"`
+	ExpireAt int64  `dynamo:"expireAt"`
 }
 
 type UserRepo struct {
@@ -83,6 +84,9 @@ func (r *UserRepo) IsUserAlreadyReservedForDeletion(userID string) (bool, error)
 	return true, nil
 }
 
-func (r *UserRepo) ReserveUserForDeletion(userID string) error {
-	return r.deleteUserTable.Put(deleteUserTable{userID}).Run()
+func (r *UserRepo) ReserveUserForDeletion(userID string, expireAt int64) error {
+	return r.deleteUserTable.Put(deleteUserTable{
+		ID:       userID,
+		ExpireAt: expireAt,
+	}).Run()
 }

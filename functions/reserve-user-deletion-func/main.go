@@ -59,7 +59,8 @@ func handle(ctx context.Context, event events.APIGatewayProxyRequest) (events.AP
 		}, nil
 	}
 
-	if err := userRepo.ReserveUserForDeletion(id.Subject); err != nil {
+	expireAt := time.Now().Add(12 * time.Hour).Unix()
+	if err := userRepo.ReserveUserForDeletion(id.Subject, expireAt); err != nil {
 		logger.Error("Failed to ReserveUserForDeletion", zap.Error(err), zap.String("reqId", event.RequestContext.RequestID))
 		return events.APIGatewayProxyResponse{
 			StatusCode: http.StatusInternalServerError,

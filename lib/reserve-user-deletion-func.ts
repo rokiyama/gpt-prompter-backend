@@ -11,7 +11,7 @@ type Props = {
   deleteUsersTable: Table;
 };
 
-export class DeleteUserFunc extends Construct {
+export class ReserveUserDeletionFunc extends Construct {
   public readonly handler: GoFunction;
 
   constructor(
@@ -21,8 +21,8 @@ export class DeleteUserFunc extends Construct {
   ) {
     super(scope, id);
 
-    this.handler = new GoFunction(this, 'deleteUserFuncHandler', {
-      entry: 'functions/delete-user-func',
+    this.handler = new GoFunction(this, 'reserveUserDeletionFuncHandler', {
+      entry: 'functions/reserve-user-deletion-func',
       logRetention: RetentionDays.ONE_YEAR,
       role,
       environment: {
