@@ -60,7 +60,10 @@ func (u *Usecase) CallOpenAI(reqID string, idToken string, req entities.ChatRequ
 	user := u.getUser(id)
 	u.checkIsUserDeleted(user)
 	u.checkTokenUsage(user, req.ApproximateTokens())
-	tokensBefore := user.Tokens
+	var tokensBefore int
+	if user != nil {
+		tokensBefore = user.Tokens
+	}
 	user.Tokens = tokensBefore + req.ApproximateTokens()
 	u.saveUser(user)
 	usedTokens := u.callOpenAI(req)
@@ -72,6 +75,9 @@ func (u *Usecase) CallOpenAI(reqID string, idToken string, req entities.ChatRequ
 func (u *Usecase) verify(idToken string) *entities.ID {
 	if u.ctx.errRes != nil {
 		return nil
+	}
+	if idToken == "" {
+		return &entities.ID{Subject: "guestUser"}
 	}
 	id, err := u.jp.Verify(idToken, time.Now())
 	if err != nil {
@@ -133,7 +139,11 @@ func (u *Usecase) checkTokenUsage(user *entities.User, reqTokens int) {
 	if u.ctx.errRes != nil {
 		return
 	}
-	if sum := user.Tokens + reqTokens; sum > constant.MaxTokensPerDay {
+	maxTokensPerDay := constant.MaxTokensPerDay
+	if user.ID == "guestUser" {
+		maxTokensPerDay = constant.MaxTokensPerDayForGuest
+	}
+	if sum := user.Tokens + reqTokens; sum > maxTokensPerDay {
 		u.logInfo("ApproximateTokens over limit", zap.Int("sum", sum))
 		u.ctx.errRes = &entities.Response{
 			Error: &entities.Error{
