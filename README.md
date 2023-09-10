@@ -20,9 +20,11 @@ ENV=prod npm run cdk bootstrap
 
 ```sh
 # dev
+npm run cdk diff
 npm run cdk deploy
 
 # prod
+ENV=prod npm run cdk diff
 ENV=prod npm run cdk deploy
 ```
 
