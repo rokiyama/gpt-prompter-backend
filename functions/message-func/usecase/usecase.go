@@ -76,6 +76,9 @@ func (u *Usecase) verify(idToken string) *entities.ID {
 	if u.ctx.errRes != nil {
 		return nil
 	}
+	if idToken == "" {
+		return &entities.ID{Subject: "guestUser"}
+	}
 	id, err := u.jp.Verify(idToken, time.Now())
 	if err != nil {
 		u.logInfo("Invalid token", zap.Error(err))
@@ -136,7 +139,11 @@ func (u *Usecase) checkTokenUsage(user *entities.User, reqTokens int) {
 	if u.ctx.errRes != nil {
 		return
 	}
-	if sum := user.Tokens + reqTokens; sum > constant.MaxTokensPerDay {
+	maxTokensPerDay := constant.MaxTokensPerDay
+	if user.ID == "guestUser" {
+		maxTokensPerDay = constant.MaxTokensPerDayForGuest
+	}
+	if sum := user.Tokens + reqTokens; sum > maxTokensPerDay {
 		u.logInfo("ApproximateTokens over limit", zap.Int("sum", sum))
 		u.ctx.errRes = &entities.Response{
 			Error: &entities.Error{
