@@ -60,10 +60,11 @@ func (u *Usecase) CallOpenAI(reqID string, idToken string, req entities.ChatRequ
 	user := u.getUser(id)
 	u.checkIsUserDeleted(user)
 	u.checkTokenUsage(user, req.ApproximateTokens())
-	user.Tokens += req.ApproximateTokens()
+	tokensBefore := user.Tokens
+	user.Tokens = tokensBefore + req.ApproximateTokens()
 	u.saveUser(user)
 	usedTokens := u.callOpenAI(req)
-	user.Tokens = usedTokens
+	user.Tokens = tokensBefore + usedTokens
 	u.saveUser(user)
 	return u.sendResponseIfErr()
 }
