@@ -15,6 +15,7 @@ import { LambdaExecRole } from './lambda-exec-role';
 import { MessageFunc } from './message-func';
 import { newMessageFuncRole } from './message-func-role';
 import { DB } from './tables';
+import { FirehoseToS3 } from './storage';
 
 export class PrompterStack extends Stack {
   constructor(scope: Construct, id: string, props?: StackProps) {
@@ -82,5 +83,7 @@ export class PrompterStack extends Stack {
         reserveUserDeletionFunc.handler
       ),
     });
+
+    new FirehoseToS3(this, 'FirehoseToS3');
   }
 }
